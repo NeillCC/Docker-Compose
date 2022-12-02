@@ -1,12 +1,16 @@
+# Instrutions:
+# put this file in /docker/guacamole. cd to that directory and run sudo docker-compose up
+# Run each of the folling lines removing the # at the beginning
+# Default web creds guacadmin/guacadmin. below is only for db auth
+#
+#docker run --rm guacamole/guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql; sudo mv initdb.sql /docker/guacamole/volumes/guacd-mysql/initdb.sql
+#docker exec -it guacd-mysql mysql -e "CREATE DATABASE guacdb;"
+#docker exec -it guacd-mysql mysql -e "use guacdb; source /var/lib/mysql/initdb.sql;"
+#docker exec -it guacd-mysql mysql -e "CREATE USER 'guac'@'%' IDENTIFIED BY 'thisDishWasmadewithtoomuchGuac';"
+#docker exec -it guacd-mysql mysql -e "GRANT SELECT,INSERT,UPDATE,DELETE ON guacdb.* TO 'guac'@'%'; FLUSH PRIVILEGES;"
 version: "2.1"
 services:
   guacd-mysql:
-  #docker run --rm guacamole/guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql; sudo mv initdb.sql /docker/guacamole/volumes/guacd-mysql/initdb.sql
-  #docker exec -it guacd-mysql mysql -e "CREATE DATABASE guacdb;"
-  #docker exec -it guacd-mysql mysql -e "use guacdb; source /var/lib/mysql/initdb.sql;"
-  #docker exec -it guacd-mysql mysql -e "CREATE USER 'guac'@'%' IDENTIFIED BY 'thisDishWasmadewithtoomuchGuac';"
-  #docker exec -it guacd-mysql mysql -e "GRANT SELECT,INSERT,UPDATE,DELETE ON guacdb.* TO 'guac'@'%'; FLUSH PRIVILEGES;"
-  #Default web creds guacadmin/guacadmin
     image: mysql
     container_name: guacd-mysql
     environment:
