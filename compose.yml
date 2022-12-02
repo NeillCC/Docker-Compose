@@ -1,0 +1,53 @@
+version: "2.1"
+services:
+  guacd-mysql:
+  #docker run --rm guacamole/guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql; sudo mv initdb.sql /docker/guacamole/volumes/guacd-mysql/initdb.sql
+  #docker exec -it guacd-mysql mysql -e "CREATE DATABASE guacdb;"
+  #docker exec -it guacd-mysql mysql -e "use guacdb; source /var/lib/mysql/initdb.sql;"
+  #docker exec -it guacd-mysql mysql -e "CREATE USER 'guac'@'%' IDENTIFIED BY 'thisDishWasmadewithtoomuchGuac';"
+  #docker exec -it guacd-mysql mysql -e "GRANT SELECT,INSERT,UPDATE,DELETE ON guacdb.* TO 'guac'@'%'; FLUSH PRIVILEGES;"
+  #Default web creds guacadmin/guacadmin
+    image: mysql
+    container_name: guacd-mysql
+    environment:
+      - MYSQL_HOSTNAME=guacd-mysql
+      - MYSQL_PORT=3306
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - '/docker/guacamole/volumes/guacd-mysql:/var/lib/mysql'
+    restart: unless-stopped
+  guacd:
+    image: guacamole/guacd:latest
+    depends_on:
+      - guacd-mysql
+    container_name: guacd
+    environment:
+      - GUACD_HOSTNAME=guacd
+      - GUACD_PORT=4822
+      - MYSQL_HOSTNAME=guacd-mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=guac
+      - MYSQL_PASSWORD=thisDishWasmadewithtoomuchGuac
+      - MYSQL_DATABASE=guacdb
+    restart: unless-stopped
+  guacamole:
+    image: guacamole/guacamole:latest
+    depends_on:
+      - guacd-mysql
+    container_name: guacamole
+    depends_on: 
+      - guacd
+    volumes:
+      - /docker/guacamole/volumes/guacamole_home:/etc/guacamole
+    environment:
+    - GUACD_HOSTNAME=guacd
+    - GUACD_PORT=4822
+    - MYSQL_HOSTNAME=guacd-mysql
+    - MYSQL_PORT=3306
+    - MYSQL_USER=guac
+    - MYSQL_PASSWORD=thisDishWasmadewithtoomuchGuac
+    - MYSQL_DATABASE=guacdb
+    ports:
+      - 8080:8080
+      - 8443:8443
+    restart: unless-stopped 
