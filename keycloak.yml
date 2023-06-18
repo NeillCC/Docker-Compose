@@ -2,6 +2,7 @@
 #Docker hostname is docker0
 #Client access (user authentication) is client.fqdn
 #Admin access (configuration and not exposed to web) is admin.fqdn
+#A Reverse proxy must be configured to encrypt traffic for client access. linuxserver/swag works well. 
 #No other options MUST be changed
 services:
   keycloak-mysql:
@@ -21,26 +22,18 @@ services:
       restart: unless-stopped
       environment:
         KC_DB: "mysql" #h2-mem, h2-file, mariadb, mysql. Defaults to h2 (local file-based)
-        #KC_DB_URL_HOST: "keycloak-mysql" #SQL Hostname
-        #KC_DB_URL_DATABASE: "keycloak" #Name of DB
         KC_DB_USERNAME: keycloak
         KC_DB_PASSWORD: SQLpassw0rd
         KC_DB_URL: "jdbc:mysql://keycloak-mysql:3306/keycloak" #SQL connection string. jdbc:mysql://sqlHost:port/dbName
-        ##below must be changed per env
-        #KC_HOSTNAME: "docker0"
-        #KC_HOSTNAME_ADMIN: "docker0"
-        #KC_HOSTNAME_PATH: "/auth"
         KC_HOSTNAME_PORT: "8080" #must be defined or admin console will spin
         KC_HTTP_RELATIVE_PATH: "/auth" # sets global relative path
         KC_HOSTNAME_PATH: "/auth" # sets cient access path
         KC_HOSTNAME_URL: "https://client.fqdn/auth" #Auth access https://client.fqdn/auth #NOTE Path is relative to the browser. Example: https://keycloak.public.com/auth
-        #KC_HOSTNAME_ADMIN_PATH: "/admin"
         KC_HOSTNAME_ADMIN_URL: "http://server.fqdn:8081/auth" #Path to access admin console relative to the browser. Keycloak will append /admin. Example: http://docker:8080/auth
-        #KEYCLOAK_ADMIN: admin
-        #KEYCLOAK_ADMIN_PASSWORD: admin
-        ##Security
+        #KEYCLOAK_ADMIN: admin #uncomment until sql is connected and new user setup
+        #KEYCLOAK_ADMIN_PASSWORD: admin #same as above
         KC_HOSTNAME_STRICT: "false" #needed for reverse proxy over http
-        KC_HOSTNAME_STRICT_BACKCHANNEL: "false" #encrypt some traffic including ssl
+        KC_HOSTNAME_STRICT_BACKCHANNEL: "false" #encrypt some traffic including sql
         KC_HOSTNAME_STRICT_HTTPS: "false" #needed for reverse proxy
         KC_HTTP_ENABLED: "true" # enable listening on http. disabled by default
         KC_PROXY: "edge" #edge assumes you have a reverse proxy sitting infront of keycloak and that your firewall rules restrict traffic aside from that proxy.
@@ -49,12 +42,9 @@ services:
       command:
         - start
         #- --optimized #Only supports h2 database
-        #- verbose
-        #- start-dev
-        #- --import-realm
+        #- start-dev #run with no security. useful for setup
       ports:
         - 8081:8080 #HTTP. 8080 was already in use.
-        #- 3000:3000
         # - 8443:8443 #HTTPS
       depends_on:
         - keycloak-mysql
