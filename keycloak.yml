@@ -2,7 +2,8 @@
 #Docker hostname is docker0
 #Client access (user authentication) is client.fqdn
 #Admin access (configuration and not exposed to web) is admin.fqdn
-#A Reverse proxy must be configured to encrypt traffic for client access. linuxserver/swag works well. 
+#A Reverse proxy must be configured to encrypt traffic for client access. linuxserver/swag works well.
+#See https://github.com/NeillCC/Docker-Compose/blob/main/resources/keycloak-reverseProxy-nginx.server for example config
 #No other options MUST be changed
 services:
   keycloak-mysql:
