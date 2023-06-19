@@ -1,0 +1,63 @@
+version: "2.1"
+services:
+  guacd-mysql:
+  #docker run --rm guacamole/guacamole /opt/guacamole/bin/initdb.sh --mysql > initdb.sql; sudo mv initdb.sql /docker/guacamole/volumes/guacd-mysql/initdb.sql
+  #docker exec -it guacd-mysql mysql -e "CREATE DATABASE guacdb;"
+  #docker exec -it guacd-mysql mysql -e "use guacdb; source /var/lib/mysql/initdb.sql;"
+  #docker exec -it guacd-mysql mysql -e "CREATE USER 'guac'@'%' IDENTIFIED BY 'thisDishWasmadewithtoomuchGuac';"
+  #docker exec -it guacd-mysql mysql -e "GRANT SELECT,INSERT,UPDATE,DELETE ON guacdb.* TO 'guac'@'%'; FLUSH PRIVILEGES;"
+  #Default web creds guacadmin/guacadmin
+    image: mysql
+    container_name: guacd-mysql
+    environment:
+      - MYSQL_HOSTNAME=guacd-mysql
+      - MYSQL_PORT=3306
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    volumes:
+      - '/docker/guacamole/volumes/guacd-mysql:/var/lib/mysql'
+    restart: unless-stopped
+  guacd:
+    image: guacamole/guacd:latest
+    depends_on:
+      - guacd-mysql
+    container_name: guacd
+    environment:
+      - GUACD_HOSTNAME=guacd
+      - GUACD_PORT=4822
+      - MYSQL_HOSTNAME=guacd-mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=guac
+      - MYSQL_PASSWORD=thisDishWasmadewithtoomuchGuac
+      - MYSQL_DATABASE=guacdb
+    restart: unless-stopped
+  guacamole:
+    image: guacamole/guacamole:latest
+    depends_on:
+      - guacd-mysql
+    container_name: guacamole
+    depends_on: 
+      - guacd
+    environment:
+      - GUACD_HOSTNAME=guacd
+      - GUACD_PORT=4822
+      - MYSQL_HOSTNAME=guacd-mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=guac
+      - MYSQL_PASSWORD=thisDishWasmadewithtoomuchGuac
+      - MYSQL_DATABASE=guacdb
+      - OPENID_AUTHORIZATION_ENDPOINT=https://keycloak.fqdn/auth/realms/master/protocol/openid-connect/auth
+      - OPENID_JWKS_ENDPOINT=https://keycloak.fqdn/auth/realms/master/protocol/openid-connect/certs
+      - OPENID_ISSUER=https://keycloak.fqdn/auth/realms/master
+      - OPENID_CLIENT_ID=guacamole-oidc
+      - OPENID_REDIRECT_URI=https://priv.fqdn/guacamole
+      - OPENID_USERNAME_CLAIM_TYPE=preferred_username # defaults to email
+      # ##Optional
+      #- OPENID_GROUPS_CLAIM_TYPE=groups
+      #- OPENID_SCOPE="openid email profile"
+      #- OPENID_ALLOWED_CLOCK_SKEW=30
+      #- OPENID_MAX_TOKEN_VALIDITY=300
+      #- OPENID_MAX_NONCE_VALIDITY=10
+    ports:
+      - 8080:8080
+      - 8443:8443
+    restart: unless-stopped 
